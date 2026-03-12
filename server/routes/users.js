@@ -12,9 +12,9 @@ router.get('/:id', (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get user's debates
+    // Get user's debates for stats
     db.all(
-      `SELECT id, title, status, winner_id FROM debates 
+      `SELECT id, status, winner_id FROM debates 
        WHERE (creator_id = ? OR opponent_id = ?) 
        ORDER BY created_at DESC`,
       [id, id],
@@ -23,13 +23,6 @@ router.get('/:id', (req, res) => {
           return res.status(500).json({ error: 'Failed to fetch debates' });
         }
 
-        const debateHistory = debates.map(debate => ({
-          id: debate.id,
-          title: debate.title,
-          status: debate.status,
-          won: debate.winner_id === id && debate.status === 'finished'
-        }));
-
         // Calculate rank
         const rank = getRank(user.points);
 
@@ -37,8 +30,7 @@ router.get('/:id', (req, res) => {
           ...user,
           rank,
           debateCount: debates.length,
-          wonCount: debates.filter(d => d.winner_id === id && d.status === 'finished').length,
-          debateHistory
+          wonCount: debates.filter(d => d.winner_id === id && d.status === 'finished').length
         });
       }
     );

@@ -16,39 +16,52 @@ router.post('/', authMiddleware, (req, res) => {
     return res.status(400).json({ error: 'Cannot debate yourself' });
   }
 
-  db.run(
-    `INSERT INTO debates 
-    (title, category, creator_id, opponent_id, starter_id, ender_id, current_turn) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [title, category, req.user.id, opponent_id, starter_id, ender_id, starter_id],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to create debate' });
+  // Check for existing pending debate with this opponent
+  db.get(
+    `SELECT id FROM debates WHERE 
+    ((creator_id = ? AND opponent_id = ?) OR (creator_id = ? AND opponent_id = ?)) 
+    AND status = 'pending'`,
+    [req.user.id, opponent_id, opponent_id, req.user.id],
+    (err, existingDebate) => {
+      if (existingDebate) {
+        return res.status(400).json({ error: 'There is already a pending invitation with this opponent' });
       }
 
-      const debateId = this.lastID;
+      db.run(
+        `INSERT INTO debates 
+        (title, category, creator_id, opponent_id, starter_id, ender_id, current_turn, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        [title, category, req.user.id, opponent_id, starter_id, ender_id, starter_id],
+        function(err) {
+          if (err) {
+            return res.status(500).json({ error: 'Failed to create debate' });
+          }
 
-      // Add tags if provided
-      if (tags && tags.length > 0) {
-        tags.forEach((tagName) => {
-          db.run(
-            'INSERT OR IGNORE INTO tags (name) VALUES (?)',
-            [tagName],
-            () => {
-              db.get('SELECT id FROM tags WHERE name = ?', [tagName], (err, tag) => {
-                if (tag) {
-                  db.run(
-                    'INSERT OR IGNORE INTO debate_tags (debate_id, tag_id) VALUES (?, ?)',
-                    [debateId, tag.id]
-                  );
+          const debateId = this.lastID;
+
+          // Add tags if provided
+          if (tags && tags.length > 0) {
+            tags.forEach((tagName) => {
+              db.run(
+                'INSERT OR IGNORE INTO tags (name) VALUES (?)',
+                [tagName],
+                () => {
+                  db.get('SELECT id FROM tags WHERE name = ?', [tagName], (err, tag) => {
+                    if (tag) {
+                      db.run(
+                        'INSERT OR IGNORE INTO debate_tags (debate_id, tag_id) VALUES (?, ?)',
+                        [debateId, tag.id]
+                      );
+                    }
+                  });
                 }
-              });
-            }
-          );
-        });
-      }
+              );
+            });
+          }
 
-      res.json({ id: debateId, message: 'Debate created' });
+          res.json({ id: debateId, message: 'Invitation sent! Waiting for opponent to accept.' });
+        }
+      );
     }
   );
 });
@@ -121,6 +134,60 @@ router.post('/:id/end', authMiddleware, (req, res) => {
       ['finished', id],
       () => {
         res.json({ message: 'Debate finished' });
+      }
+    );
+  });
+});
+
+// Accept debate invitation
+router.post('/:id/accept', authMiddleware, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
+    if (err || !debate) {
+      return res.status(404).json({ error: 'Debate not found' });
+    }
+
+    if (debate.opponent_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only opponent can accept' });
+    }
+
+    if (debate.status !== 'pending') {
+      return res.status(400).json({ error: 'Debate is not pending' });
+    }
+
+    db.run(
+      'UPDATE debates SET status = ? WHERE id = ?',
+      ['active', id],
+      () => {
+        res.json({ message: 'Invitation accepted' });
+      }
+    );
+  });
+});
+
+// Reject debate invitation
+router.post('/:id/reject', authMiddleware, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
+    if (err || !debate) {
+      return res.status(404).json({ error: 'Debate not found' });
+    }
+
+    if (debate.opponent_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only opponent can reject' });
+    }
+
+    if (debate.status !== 'pending') {
+      return res.status(400).json({ error: 'Debate is not pending' });
+    }
+
+    db.run(
+      'DELETE FROM debates WHERE id = ?',
+      [id],
+      () => {
+        res.json({ message: 'Invitation rejected' });
       }
     );
   });

@@ -35,7 +35,7 @@ function initializeDatabase() {
       starter_id INTEGER NOT NULL,
       ender_id INTEGER NOT NULL,
       current_turn INTEGER NOT NULL,
-      status TEXT DEFAULT 'active',
+      status TEXT DEFAULT 'pending',
       views INTEGER DEFAULT 0,
       winner_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

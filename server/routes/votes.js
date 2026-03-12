@@ -45,10 +45,10 @@ router.post('/', authMiddleware, (req, res) => {
           return res.status(500).json({ error: 'Failed to post vote' });
         }
 
-        // Calculate winner and update points
-        calculateAndSetWinner(debate_id);
-
-        res.json({ id: this.lastID, message: 'Vote registered' });
+        // Calculate winner and update points (wait for completion)
+        calculateAndSetWinner(debate_id, () => {
+          res.json({ id: this.lastID, message: 'Vote registered' });
+        });
       }
     );
   });
@@ -71,12 +71,15 @@ router.get('/debate/:debate_id', (req, res) => {
 });
 
 // Calculate winner and update points
-function calculateAndSetWinner(debateId) {
+function calculateAndSetWinner(debateId, callback) {
   db.all(
     'SELECT voted_user_id, COUNT(*) as count FROM votes WHERE debate_id = ? GROUP BY voted_user_id',
     [debateId],
     (err, results) => {
-      if (!results || results.length === 0) return;
+      if (!results || results.length === 0) {
+        if (callback) callback();
+        return;
+      }
 
       let winnerId = null;
       if (results.length === 1) {
@@ -95,10 +98,15 @@ function calculateAndSetWinner(debateId) {
             // Update winner points
             db.run(
               'UPDATE users SET points = points + 1 WHERE id = ?',
-              [winnerId]
+              [winnerId],
+              () => {
+                if (callback) callback();
+              }
             );
           }
         );
+      } else {
+        if (callback) callback();
       }
     }
   );

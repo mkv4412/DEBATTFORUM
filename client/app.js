@@ -32,6 +32,7 @@ const app = {
   goDebates() {
     this.showView('debatesView');
     this.loadDebates();
+    this.loadPendingInvitations();
   },
 
   goCreateDebate() {
@@ -195,6 +196,114 @@ const app = {
 
   applyFilters() {
     this.loadDebates();
+    this.loadPendingInvitations();
+  },
+
+  async loadPendingInvitations() {
+    try {
+      const response = await fetch(`${this.apiBase}/debates`);
+      const allDebates = await response.json();
+
+      // Filter for pending debates where current user is the opponent
+      const pendingInvitations = allDebates.filter(debate => 
+        debate.status === 'pending' && debate.opponent_id === this.currentUser?.id
+      );
+
+      this.renderPendingInvitations(pendingInvitations);
+    } catch (err) {
+      console.error('Error loading pending invitations:', err);
+    }
+  },
+
+  renderPendingInvitations(invitations) {
+    const section = document.getElementById('pendingInvitationsSection');
+    const list = document.getElementById('pendingInvitationsList');
+
+    if (invitations.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = '';
+
+    invitations.forEach(invitation => {
+      const card = document.createElement('div');
+      card.className = 'debate-card invitation-card';
+
+      card.innerHTML = `
+        <h3>${this.escapeHtml(invitation.title)}</h3>
+        <div class="debate-info">
+          <span class="category">${this.escapeHtml(invitation.category)}</span>
+          <span class="status pending">Ventet</span>
+        </div>
+        <p style="font-size: 0.9rem; color: #666; margin: 0.5rem 0;">
+          Du er invitert av: <strong id="creator-${invitation.id}">...</strong>
+        </p>
+        <div class="invitation-buttons" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button onclick="app.acceptInvitation(${invitation.id});" class="btn btn-primary" style="flex: 1;">Aksepter</button>
+          <button onclick="app.rejectInvitation(${invitation.id});" class="btn btn-secondary" style="flex: 1;">Avslag</button>
+        </div>
+      `;
+
+      list.appendChild(card);
+
+      // Load creator name
+      fetch(`${this.apiBase}/users/${invitation.creator_id}`)
+        .then(r => r.json())
+        .then(user => {
+          const el = document.getElementById(`creator-${invitation.id}`);
+          if (el) el.innerText = user.username;
+        });
+    });
+  },
+
+  async acceptInvitation(debateId) {
+    try {
+      const response = await fetch(`${this.apiBase}/debates/${debateId}/accept`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Aksept mislyktes');
+      }
+
+      this.showMessage('authMessage', 'Invitasjon akseptert! Debatten starter nå.', 'success');
+      this.loadDebates();
+      this.loadPendingInvitations();
+    } catch (err) {
+      this.showMessage('authMessage', err.message, 'error');
+    }
+  },
+
+  async rejectInvitation(debateId) {
+    try {
+      const response = await fetch(`${this.apiBase}/debates/${debateId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Avslag mislyktes');
+      }
+
+      this.showMessage('authMessage', 'Invitasjon avslått.', 'success');
+      this.loadDebates();
+      this.loadPendingInvitations();
+    } catch (err) {
+      this.showMessage('authMessage', err.message, 'error');
+    }
   },
 
   async loadDebate(debateId) {
@@ -327,8 +436,44 @@ const app = {
     }
   },
 
+  validateCreateDebateForm() {
+    const fields = [
+      { id: 'debateTitle', name: 'Tittel' },
+      { id: 'debateCategory', name: 'Kategori' },
+      { id: 'opponentSearch', name: 'Motstander' },
+      { id: 'starterSelect', name: 'Hvem starter' },
+      { id: 'enderSelect', name: 'Hvem avslutter' }
+    ];
+
+    let hasErrors = false;
+    const errors = [];
+
+    fields.forEach(field => {
+      const element = document.getElementById(field.id);
+      const formGroup = element.closest('.form-group');
+      const value = element.value.trim();
+
+      if (!value) {
+        formGroup.classList.add('invalid');
+        errors.push(field.name);
+        hasErrors = true;
+      } else {
+        formGroup.classList.remove('invalid');
+      }
+    });
+
+    return { hasErrors, errors };
+  },
+
   async createDebate(event) {
     event.preventDefault();
+
+    // Validate form
+    const validation = this.validateCreateDebateForm();
+    if (validation.hasErrors) {
+      this.showMessage('createMessage', `Manglende felt: ${validation.errors.join(', ')}`, 'error');
+      return;
+    }
 
     const title = document.getElementById('debateTitle').value;
     const category = document.getElementById('debateCategory').value;
@@ -339,11 +484,6 @@ const app = {
     const opponentId = document.getElementById('opponentId').value;
     const starter = document.getElementById('starterSelect').value;
     const ender = document.getElementById('enderSelect').value;
-
-    if (!title || !category || !opponentId || !starter || !ender) {
-      this.showMessage('createMessage', 'Alle felt er påkrevd', 'error');
-      return;
-    }
 
     try {
       const starterId = starter === 'me' ? this.currentUser.id : parseInt(opponentId);
@@ -375,6 +515,7 @@ const app = {
       document.querySelector('.debate-form').reset();
       document.getElementById('opponentId').value = '';
       document.getElementById('selectedOpponent').style.display = 'none';
+      document.querySelectorAll('.debate-form .form-group').forEach(fg => fg.classList.remove('invalid'));
       
       setTimeout(() => this.goDebates(), 1500);
     } catch (err) {
@@ -571,19 +712,6 @@ const app = {
       document.getElementById('profileRank').innerText = user.rank;
       document.getElementById('profileDebateCount').innerText = user.debateCount;
       document.getElementById('profileWonCount').innerText = user.wonCount;
-
-      // Debate history
-      const historyHtml = user.debateHistory.map(debate => `
-        <div class="history-item">
-          <span class="history-icon">${debate.won ? '✔' : '✖'}</span>
-          <span class="history-title">${this.escapeHtml(debate.title)}</span>
-          <span class="history-result ${debate.won ? 'won' : 'lost'}">
-            ${debate.won ? 'Vant' : 'Tapte'}
-          </span>
-        </div>
-      `).join('');
-
-      document.getElementById('debateHistory').innerHTML = historyHtml || '<p style="color: #999;">Ingen debatter ennå</p>';
     } catch (err) {
       console.error('Error loading profile:', err);
     }
@@ -609,8 +737,40 @@ const app = {
       "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
+  },
+
+  initFormValidation() {
+    const formFields = [
+      'debateTitle',
+      'debateCategory',
+      'opponentSearch',
+      'starterSelect',
+      'enderSelect'
+    ];
+
+    formFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) {
+        element.addEventListener('input', () => {
+          const formGroup = element.closest('.form-group');
+          if (element.value.trim()) {
+            formGroup.classList.remove('invalid');
+          }
+        });
+
+        element.addEventListener('change', () => {
+          const formGroup = element.closest('.form-group');
+          if (element.value.trim()) {
+            formGroup.classList.remove('invalid');
+          }
+        });
+      }
+    });
   }
 };
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => app.init());
+document.addEventListener('DOMContentLoaded', () => {
+  app.init();
+  app.initFormValidation();
+});
