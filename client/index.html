@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debattforum</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar" role="navigation" aria-label="Hovednavigasjon">
+    <div class="navbar-container">
+      <h1 class="navbar-brand">
+        <a href="#" onclick="app.goHome(); return false;">Debattforum</a>
+      </h1>
+      <div class="navbar-menu" id="navbarMenu">
+        <a href="#" onclick="app.goHome(); return false;" class="nav-link">Hjem</a>
+        <a href="#" onclick="app.goDebates(); return false;" id="debatesNav" class="nav-link" style="display:none;">Debatter</a>
+        <a href="#" onclick="app.goCreateDebate(); return false;" id="createNav" class="nav-link" style="display:none;">Ny debatt</a>
+        <a href="#" onclick="app.goProfile(); return false;" id="profileNav" class="nav-link" style="display:none;">Min profil</a>
+        <span id="notificationBell" class="notification-bell" style="display:none;">
+          🔔 <span id="notificationCount" class="notification-count"></span>
+        </span>
+        <button onclick="app.logout();" id="logoutBtn" class="nav-btn nav-btn-logout" style="display:none;">Logg ut</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Home/Auth View -->
+    <div id="homeView" class="view active">
+      <div class="auth-container">
+        <div class="auth-box">
+          <h2>Velkommen til Debattforum</h2>
+          <p>Diskuter strukturert, baser på fakta, og la publikum avgjøre.</p>
+          
+          <div id="authForm">
+            <div class="form-group">
+              <label for="username">Brukernavn</label>
+              <input type="text" id="username" placeholder="Din brukernavn" aria-label="Brukernavn">
+            </div>
+            <div class="form-group">
+              <label for="password">Passord</label>
+              <input type="password" id="password" placeholder="Ditt passord" aria-label="Passord">
+            </div>
+            <div class="auth-buttons">
+              <button onclick="app.login();" class="btn btn-primary">Logg inn</button>
+              <button onclick="app.register();" class="btn btn-secondary">Registrer</button>
+            </div>
+            <div id="authMessage" class="message"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debates List View -->
+    <div id="debatesView" class="view">
+      <div class="debates-header">
+        <h2>Debatter</h2>
+        <div class="filter-controls">
+          <select id="categoryFilter" onchange="app.applyFilters();" aria-label="Filtrer etter kategori">
+            <option value="">Alle kategorier</option>
+            <option value="AI">AI</option>
+            <option value="Skole">Skole</option>
+            <option value="Politik">Politik</option>
+            <option value="Teknologi">Teknologi</option>
+            <option value="Økonomi">Økonomi</option>
+          </select>
+          <select id="statusFilter" onchange="app.applyFilters();" aria-label="Filtrer etter status">
+            <option value="">Alle</option>
+            <option value="active">Aktive</option>
+            <option value="finished">Ferdige</option>
+          </select>
+        </div>
+      </div>
+      <div id="debatesList" class="debates-grid"></div>
+    </div>
+
+    <!-- Debate Detail View -->
+    <div id="debateView" class="view">
+      <div class="debate-container">
+        <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
+        <div class="debate-header">
+          <h2 id="debateTitle"></h2>
+          <div class="debate-info">
+            <span class="category" id="debateCategory"></span>
+            <span class="status" id="debateStatus"></span>
+            <span class="views">👁 <span id="debateViews">0</span> visninger</span>
+          </div>
+        </div>
+
+        <div class="debate-participants">
+          <div class="participant">
+            <h3 id="creatorName"></h3>
+            <p class="turn-indicator" id="creatorTurn" style="display:none;">🟢 Din tur</p>
+            <p class="turn-indicator waiting" id="creatorWaiting" style="display:none;">⏳ Venter</p>
+          </div>
+          <div class="vs">VS</div>
+          <div class="participant">
+            <h3 id="opponentName"></h3>
+            <p class="turn-indicator" id="opponentTurn" style="display:none;">🟢 Din tur</p>
+            <p class="turn-indicator waiting" id="opponentWaiting" style="display:none;">⏳ Venter</p>
+          </div>
+        </div>
+
+        <div class="messages-container">
+          <div id="messagesBox" class="messages-list" role="region" aria-label="Debattmeldinger" aria-live="polite"></div>
+        </div>
+
+        <!-- Message Input (only if active and user's turn) -->
+        <div id="messageInputBox" class="message-input-box" style="display:none;">
+          <textarea id="messageInput" placeholder="Skriv ditt innlegg..." aria-label="Skriv innlegg"></textarea>
+          <button onclick="app.postMessage();" class="btn btn-primary">Innlegg</button>
+        </div>
+
+        <!-- End Debate Button (only if user can end) -->
+        <div id="endDebateBox" style="display:none;">
+          <button onclick="app.endDebate();" class="btn btn-danger">Avslutt debatt</button>
+        </div>
+
+        <!-- Voting Section (only if finished) -->
+        <div id="votingSection" class="voting-section" style="display:none;">
+          <h3>Hvem hadde rett?</h3>
+          <p>Stemningen er åpen - velg hvem du mener vant debatten.</p>
+          <div class="voting-buttons">
+            <button onclick="app.vote(app.currentDebate.creator_id);" class="vote-btn" id="voteCreatorBtn"></button>
+            <button onclick="app.vote(app.currentDebate.opponent_id);" class="vote-btn" id="voteOpponentBtn"></button>
+          </div>
+          <div id="votedMessage" class="message" style="display:none;">Du har allerede stemt.</div>
+        </div>
+
+        <!-- Results Section (when finished) -->
+        <div id="resultsSection" class="results-section" style="display:none;">
+          <h3>Resultat</h3>
+          <div class="result-box">
+            <p id="winnerText"></p>
+            <div class="vote-stats">
+              <div id="voteStats"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Debate View -->
+    <div id="createDebateView" class="view">
+      <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
+      <div class="create-debate-container">
+        <h2>Opprett ny debatt</h2>
+        <form onsubmit="app.createDebate(event);" class="debate-form">
+          <div class="form-group">
+            <label for="debateTitle">Tittel</label>
+            <input type="text" id="debateTitle" placeholder="Debattens tema" aria-label="Debattpømt" required>
+          </div>
+
+          <div class="form-group">
+            <label for="debateCategory">Kategori</label>
+            <select id="debateCategory" aria-label="Kategori" required>
+              <option value="">Velg kategori</option>
+              <option value="AI">AI</option>
+              <option value="Skole">Skole</option>
+              <option value="Politik">Politik</option>
+              <option value="Teknologi">Teknologi</option>
+              <option value="Økonomi">Økonomi</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="debateTags">Tags (kommaseparert)</label>
+            <input type="text" id="debateTags" placeholder="#AI,#Utdanning,#Debatt" aria-label="Tags">
+          </div>
+
+          <div class="form-group">
+            <label for="opponentUsername">Motstander (brukernavn)</label>
+            <input type="text" id="opponentUsername" placeholder="Brukernavn på motstander" aria-label="Motstanders brukernavn" required>
+          </div>
+
+          <div class="form-group">
+            <label for="starterSelect">Hvem starter?</label>
+            <select id="starterSelect" aria-label="Hvem starter" required>
+              <option value="">Velg</option>
+              <option value="me">Jeg starter</option>
+              <option value="opponent">Motstander starter</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="enderSelect">Hvem avslutter?</label>
+            <select id="enderSelect" aria-label="Hvem avslutter" required>
+              <option value="">Velg</option>
+              <option value="me">Jeg avslutter</option>
+              <option value="opponent">Motstander avslutter</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-wide">Opprett debatt</button>
+          <div id="createMessage" class="message"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Profile View -->
+    <div id="profileView" class="view">
+      <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
+      <div class="profile-container">
+        <div class="profile-header">
+          <h2 id="profileUsername"></h2>
+          <div class="profile-stats">
+            <div class="stat">
+              <span class="label">Poeng</span>
+              <span class="value" id="profilePoints">0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Rang</span>
+              <span class="value" id="profileRank">Ny debattant</span>
+            </div>
+            <div class="stat">
+              <span class="label">Debatter</span>
+              <span class="value" id="profileDebateCount">0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Vunnet</span>
+              <span class="value" id="profileWonCount">0</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>Debatthistorikk</h3>
+        <div id="debateHistory" class="debate-history"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
