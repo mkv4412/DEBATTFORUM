@@ -70,4 +70,24 @@ router.get('/me', authMiddleware, (req, res) => {
   });
 });
 
+// Search users by username
+router.get('/search', (req, res) => {
+  const { username } = req.query;
+
+  if (!username || username.length < 2) {
+    return res.status(400).json({ error: 'Username must be at least 2 characters' });
+  }
+
+  db.all(
+    'SELECT id, username, points FROM users WHERE username LIKE ? LIMIT 10',
+    [`%${username}%`],
+    (err, users) => {
+      if (err) {
+        return res.status(500).json({ error: 'Search failed' });
+      }
+      res.json(users);
+    }
+  );
+});
+
 module.exports = router;

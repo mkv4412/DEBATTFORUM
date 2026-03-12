@@ -898,6 +898,61 @@ body.debate-mode .messages-container {
   border: 2px solid var(--secondary-color);
 }
 
+/* Search Results */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--light-bg);
+  transition: background-color 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: var(--light-bg);
+}
+
+.search-result-item .username {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.search-result-item .points {
+  font-size: 0.85rem;
+  color: #666;
+  margin-left: 0.5rem;
+}
+
+.selected-opponent {
+  padding: 0.5rem;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  border: 1px solid #c3e6cb;
+}
+
+.selected-opponent span {
+  font-weight: 600;
+}
+
 /* High Contrast Mode Support */
 @media (prefers-contrast: more) {
   :root {

@@ -336,26 +336,16 @@ const app = {
       .split(',')
       .map(t => t.trim())
       .filter(t => t);
-    const opponentUsername = document.getElementById('opponentUsername').value;
+    const opponentId = document.getElementById('opponentId').value;
     const starter = document.getElementById('starterSelect').value;
     const ender = document.getElementById('enderSelect').value;
 
-    if (!title || !category || !opponentUsername || !starter || !ender) {
+    if (!title || !category || !opponentId || !starter || !ender) {
       this.showMessage('createMessage', 'Alle felt er påkrevd', 'error');
       return;
     }
 
-    // Get opponent ID
     try {
-      const opponents = await fetch(`${this.apiBase}/debates`).then(r => r.json());
-      // This is a simplified lookup - ideally we'd have a user search endpoint
-      const opponentUsers = [];
-      
-      // For now, we'll create a simplified version - in real system, search users API
-      // Let's prompt user for opponent ID instead
-      const opponentId = prompt('Opponent ID (eller logg inn med motstander først)');
-      if (!opponentId) return;
-
       const starterId = starter === 'me' ? this.currentUser.id : parseInt(opponentId);
       const enderId = ender === 'me' ? this.currentUser.id : parseInt(opponentId);
 
@@ -383,11 +373,59 @@ const app = {
 
       this.showMessage('createMessage', 'Debatt opprettet!', 'success');
       document.querySelector('.debate-form').reset();
+      document.getElementById('opponentId').value = '';
+      document.getElementById('selectedOpponent').style.display = 'none';
       
       setTimeout(() => this.goDebates(), 1500);
     } catch (err) {
       this.showMessage('createMessage', 'Feil: ' + err.message, 'error');
     }
+  },
+
+  async searchOpponents() {
+    const query = document.getElementById('opponentSearch').value;
+    const resultsDiv = document.getElementById('opponentSearchResults');
+
+    if (query.length < 2) {
+      resultsDiv.style.display = 'none';
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.apiBase}/auth/search?username=${encodeURIComponent(query)}`);
+      const users = await response.json();
+
+      resultsDiv.innerHTML = '';
+
+      if (users.length === 0) {
+        resultsDiv.innerHTML = '<div style="padding: 0.75rem 1rem; color: #666;">Ingen brukere funnet</div>';
+        resultsDiv.style.display = 'block';
+        return;
+      }
+
+      users.forEach(user => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        item.innerHTML = `
+          <span class="username">${this.escapeHtml(user.username)}</span>
+          <span class="points">(${user.points} poeng)</span>
+        `;
+        item.onclick = () => this.selectOpponent(user.id, user.username);
+        resultsDiv.appendChild(item);
+      });
+
+      resultsDiv.style.display = 'block';
+    } catch (err) {
+      console.error('Error searching opponents:', err);
+    }
+  },
+
+  selectOpponent(userId, username) {
+    document.getElementById('opponentId').value = userId;
+    document.getElementById('opponentSearch').value = username;
+    document.getElementById('opponentSearchResults').style.display = 'none';
+    document.getElementById('selectedOpponentName').innerText = username;
+    document.getElementById('selectedOpponent').style.display = 'block';
   },
 
   async endDebate() {

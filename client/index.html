@@ -172,8 +172,17 @@
           </div>
 
           <div class="form-group">
-            <label for="opponentUsername">Motstander (brukernavn)</label>
-            <input type="text" id="opponentUsername" placeholder="Brukernavn på motstander" aria-label="Motstanders brukernavn" required>
+            <label for="opponentSearch">Motstander (søk etter brukernavn)</label>
+            <div class="opponent-search" style="position: relative;">
+              <input type="text" id="opponentSearch" placeholder="Søk etter bruker..." 
+                     aria-label="Søk motstander" oninput="app.searchOpponents()" 
+                     autocomplete="off" required>
+              <input type="hidden" id="opponentId">
+              <div id="opponentSearchResults" class="search-results" style="display: none;"></div>
+            </div>
+            <div id="selectedOpponent" class="selected-opponent" style="display: none; margin-top: 0.5rem;">
+              ✓ Valgt: <span id="selectedOpponentName"></span>
+            </div>
           </div>
 
           <div class="form-group">
