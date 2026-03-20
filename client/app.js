@@ -382,6 +382,10 @@ const app = {
       document.getElementById('endDebateBox').style.display =
         (this.currentDebate.ender_id === this.currentUser?.id && this.currentDebate.status === 'active') ? 'block' : 'none';
 
+      // Show admin delete button for admin user regardless of dispute owner
+      document.getElementById('adminDeleteBox').style.display =
+        (this.currentUser?.admin) ? 'block' : 'none';
+
       // Show voting if finished
       if (this.currentDebate.status === 'finished') {
         await this.loadVotingSection();
@@ -638,6 +642,32 @@ const app = {
       this.loadDebate(this.currentDebate.id);
     } catch (err) {
       alert('Feil: ' + err.message);
+    }
+  },
+
+  // Admin delete debate: Allows admin to delete arbitrary debate
+  async deleteDebate() {
+    if (!confirm('Er du sikker på at du vil slette denne debatten? Dette kan ikke angres.')) return;
+
+    try {
+      const response = await fetch(`${this.apiBase}/debates/${this.currentDebate.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Sletting mislyktes');
+      }
+
+      this.showMessage('authMessage', 'Debatt slettet', 'success');
+      this.goDebates();
+    } catch (err) {
+      this.showMessage('authMessage', 'Feil: ' + err.message, 'error');
     }
   },
 

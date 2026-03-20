@@ -135,6 +135,11 @@
           <button onclick="app.endDebate();" class="btn btn-danger">Avslutt debatt</button>
         </div>
 
+        <!-- Admin Delete Debate Button (only for admin users) -->
+        <div id="adminDeleteBox" style="display:none; margin-top: 1rem;">
+          <button onclick="app.deleteDebate();" class="btn btn-danger">Slett debatt (admin)</button>
+        </div>
+
         <!-- Voting Section (only if finished) -->
         <div id="votingSection" class="voting-section" style="display:none;">
           <h3>Hvem hadde rett?</h3>

@@ -201,4 +201,28 @@ router.post('/:id/reject', authMiddleware, (req, res) => {
   });
 });
 
+// Delete debate endpoint: Allows admin or debate creator to delete any debate.
+// Bob is assigned admin role in database initialization and can delete any debate.
+router.delete('/:id', authMiddleware, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
+    if (err || !debate) {
+      return res.status(404).json({ error: 'Debate not found' });
+    }
+
+    if (!req.user.admin && debate.creator_id !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to delete this debate' });
+    }
+
+    db.run('DELETE FROM debates WHERE id = ?', [id], (deleteErr) => {
+      if (deleteErr) {
+        return res.status(500).json({ error: 'Failed to delete debate' });
+      }
+
+      res.json({ message: 'Debate deleted' });
+    });
+  });
+});
+
 module.exports = router;

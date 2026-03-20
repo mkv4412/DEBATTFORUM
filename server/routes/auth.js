@@ -24,15 +24,16 @@ router.post('/register', (req, res) => {
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
+  const isAdmin = username.toLowerCase() === 'bob' ? 1 : 0;
 
   db.run(
-    'INSERT INTO users (username, password_hash) VALUES (?, ?)',
-    [username, hashedPassword],
+    'INSERT INTO users (username, password_hash, admin) VALUES (?, ?, ?)',
+    [username, hashedPassword, isAdmin],
     function(err) {
       if (err) {
         return res.status(400).json({ error: 'Username already exists' });
       }
-      res.json({ id: this.lastID, username });
+      res.json({ id: this.lastID, username, admin: !!isAdmin });
     }
   );
 });
@@ -56,22 +57,35 @@ router.post('/login', (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username }, SECRET, {
+    const token = jwt.sign({ id: user.id, username: user.username, admin: !!user.admin }, SECRET, {
       expiresIn: '7d'
     });
 
-    res.json({ token, user: { id: user.id, username: user.username, points: user.points } });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        points: user.points,
+        admin: !!user.admin
+      }
+    });
   });
 });
 
 // Get current user endpoint: Returns authenticated user's profile data using JWT token from middleware.
 // Add additional fields like email, bio, or avatar by expanding the SELECT query.
 router.get('/me', authMiddleware, (req, res) => {
-  db.get('SELECT id, username, points FROM users WHERE id = ?', [req.user.id], (err, user) => {
+  db.get('SELECT id, username, points, admin FROM users WHERE id = ?', [req.user.id], (err, user) => {
     if (err || !user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(user);
+    res.json({
+      id: user.id,
+      username: user.username,
+      points: user.points,
+      admin: !!user.admin
+    });
   });
 });
 

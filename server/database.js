@@ -23,9 +23,35 @@ function initializeDatabase() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       points INTEGER DEFAULT 0,
+      admin INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Ensure admin column exists on upgrades (SQLite ALTER TABLE doesn't support IF NOT EXISTS for columns).
+  db.all("PRAGMA table_info(users)", (err, columns) => {
+    if (!err && columns && !columns.some(col => col.name === 'admin')) {
+      db.run("ALTER TABLE users ADD COLUMN admin INTEGER DEFAULT 0");
+    }
+  });
+
+  // Ensure bob is administrator (for the admin panel requirement).
+  const bcrypt = require('bcryptjs');
+  db.get("SELECT * FROM users WHERE username = ?", ['bob'], (err, bob) => {
+    if (!err && bob) {
+      if (!bob.admin) {
+        db.run("UPDATE users SET admin = 1 WHERE id = ?", [bob.id]);
+      }
+      // ensure only bob is admin
+      db.run("UPDATE users SET admin = 0 WHERE username != ?", ['bob']);
+    } else if (!err && !bob) {
+      const bobPasswordHash = bcrypt.hashSync('bob123', 10);
+      db.run(
+        "INSERT INTO users (username, password_hash, points, admin) VALUES (?, ?, 0, 1)",
+        ['bob', bobPasswordHash]
+      );
+    }
+  });
 
   // Debates table: Stores debate metadata including participants, status, and turn information.
   // Modify status values or add scoring columns based on debate rule changes.
