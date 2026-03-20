@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Create debate endpoint: Creates new debate invitation with participants and assigns starter/ender roles.
 // To enforce debate title length limits, add validation before database insertion.
+router.post('/', authMiddleware, (req, res) => {
   const { title, category, opponent_id, starter_id, ender_id, tags } = req.body;
 
   if (!title || !category || !opponent_id || !starter_id || !ender_id) {
@@ -70,6 +71,7 @@ const router = express.Router();
 
 // Get all debates endpoint: Retrieves debates with optional filtering by category and status.
 // Add sorting by date, views, or votes by extending the ORDER BY clause.
+router.get('/', (req, res) => {
   const { category, status, tags } = req.query;
   let query = 'SELECT * FROM debates';
   const params = [];
@@ -100,6 +102,7 @@ const router = express.Router();
 
 // Get debate by ID endpoint: Retrieves single debate details and increments view counter.
 // Track additional metrics (last_activity, comment_count) by adding UPDATE before SELECT.
+router.get('/:id', (req, res) => {
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -116,6 +119,7 @@ const router = express.Router();
 
 // End debate endpoint: Marks debate as finished (only ender can call) and enables voting phase.
 // To prevent premature endings, add minimum message count requirement before allowing end.
+router.post('/:id/end', authMiddleware, (req, res) => {
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -143,6 +147,7 @@ const router = express.Router();
 
 // Accept invitation endpoint: Opponent accepts pending debate invitation and changes status to active.
 // To require acceptance confirmation, add timeout window before auto-rejecting invitations.
+router.post('/:id/accept', authMiddleware, (req, res) => {
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -170,6 +175,7 @@ const router = express.Router();
 
 // Reject invitation endpoint: Opponent rejects invitation, deletes debate record and notifies creator.
 // To keep rejection history, change DELETE to UPDATE with rejection_reason and status='rejected'.
+router.post('/:id/reject', authMiddleware, (req, res) => {
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {

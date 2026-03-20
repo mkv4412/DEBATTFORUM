@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Post vote endpoint: Records vote, prevents duplicate votes, and calculates winner to award points.
 // To add vote confirmation, send email notification when winner is determined.
+router.post('/', authMiddleware, (req, res) => {
   const { debate_id, voted_user_id } = req.body;
 
   if (!debate_id || !voted_user_id) {
@@ -58,6 +59,7 @@ const router = express.Router();
 
 // Get votes endpoint: Returns all votes for a debate to display in voting section.
 // Optimize by caching vote counts periodically to reduce database queries on popular debates.
+router.get('/debate/:debate_id', (req, res) => {
   const { debate_id } = req.params;
 
   db.all(
@@ -74,6 +76,7 @@ const router = express.Router();
 
 // Calculate winner function: Determines winner from vote tallies and awards 1 point to winner.
 // To add tie-breaking logic, implement custom scoring when votes are equal (coin flip, etc).
+function calculateAndSetWinner(debateId, callback) {
   db.all(
     'SELECT voted_user_id, COUNT(*) as count FROM votes WHERE debate_id = ? GROUP BY voted_user_id',
     [debateId],

@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Post message endpoint: Inserts message, validates turn, and switches turn to opponent.
 // To add message moderation, validate content against spam/profanity filters before insertion.
+router.post('/', authMiddleware, (req, res) => {
   const { debate_id, content } = req.body;
 
   if (!debate_id || !content) {
@@ -58,6 +59,7 @@ const router = express.Router();
 
 // Get messages endpoint: Retrieves all messages for debate with username joins in chronological order.
 // To paginate messages, add LIMIT and OFFSET parameters to prevent loading thousands of messages.
+router.get('/debate/:debate_id', (req, res) => {
   const { debate_id } = req.params;
 
   db.all(
