@@ -1,6 +1,10 @@
+// JWT authentication middleware: Extracts Bearer token from Authorization header and validates it.
+// To use different token algorithm, modify the jwt.verify() call and SECRET generation.
 const jwt = require('jsonwebtoken');
 const SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// Middleware function: Checks for valid JWT token in request headers.
+// Attach this to routes that require authentication using router.post('/path', authMiddleware, handler).
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
 

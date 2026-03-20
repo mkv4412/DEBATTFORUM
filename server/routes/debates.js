@@ -1,11 +1,13 @@
+// Debates routes: Handle debate creation, retrieval, acceptance, rejection, and ending.
+// To add debate categories, modify the category validation and database constraints.
 const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Create debate
-router.post('/', authMiddleware, (req, res) => {
+// Create debate endpoint: Creates new debate invitation with participants and assigns starter/ender roles.
+// To enforce debate title length limits, add validation before database insertion.
   const { title, category, opponent_id, starter_id, ender_id, tags } = req.body;
 
   if (!title || !category || !opponent_id || !starter_id || !ender_id) {
@@ -66,8 +68,8 @@ router.post('/', authMiddleware, (req, res) => {
   );
 });
 
-// Get all debates with filtering
-router.get('/', (req, res) => {
+// Get all debates endpoint: Retrieves debates with optional filtering by category and status.
+// Add sorting by date, views, or votes by extending the ORDER BY clause.
   const { category, status, tags } = req.query;
   let query = 'SELECT * FROM debates';
   const params = [];
@@ -96,8 +98,8 @@ router.get('/', (req, res) => {
   });
 });
 
-// Get debate by ID
-router.get('/:id', (req, res) => {
+// Get debate by ID endpoint: Retrieves single debate details and increments view counter.
+// Track additional metrics (last_activity, comment_count) by adding UPDATE before SELECT.
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -112,8 +114,8 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// End debate (only by ender_id)
-router.post('/:id/end', authMiddleware, (req, res) => {
+// End debate endpoint: Marks debate as finished (only ender can call) and enables voting phase.
+// To prevent premature endings, add minimum message count requirement before allowing end.
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -139,8 +141,8 @@ router.post('/:id/end', authMiddleware, (req, res) => {
   });
 });
 
-// Accept debate invitation
-router.post('/:id/accept', authMiddleware, (req, res) => {
+// Accept invitation endpoint: Opponent accepts pending debate invitation and changes status to active.
+// To require acceptance confirmation, add timeout window before auto-rejecting invitations.
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {
@@ -166,8 +168,8 @@ router.post('/:id/accept', authMiddleware, (req, res) => {
   });
 });
 
-// Reject debate invitation
-router.post('/:id/reject', authMiddleware, (req, res) => {
+// Reject invitation endpoint: Opponent rejects invitation, deletes debate record and notifies creator.
+// To keep rejection history, change DELETE to UPDATE with rejection_reason and status='rejected'.
   const { id } = req.params;
 
   db.get('SELECT * FROM debates WHERE id = ?', [id], (err, debate) => {

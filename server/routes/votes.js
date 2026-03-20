@@ -1,11 +1,13 @@
+// Vote routes: Handle voting on finished debates and retrieving vote results.
+// To add weighted voting, modify the points calculation formula in calculateAndSetWinner.
 const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Post vote
-router.post('/', authMiddleware, (req, res) => {
+// Post vote endpoint: Records vote, prevents duplicate votes, and calculates winner to award points.
+// To add vote confirmation, send email notification when winner is determined.
   const { debate_id, voted_user_id } = req.body;
 
   if (!debate_id || !voted_user_id) {
@@ -54,8 +56,8 @@ router.post('/', authMiddleware, (req, res) => {
   });
 });
 
-// Get votes for debate
-router.get('/debate/:debate_id', (req, res) => {
+// Get votes endpoint: Returns all votes for a debate to display in voting section.
+// Optimize by caching vote counts periodically to reduce database queries on popular debates.
   const { debate_id } = req.params;
 
   db.all(
@@ -70,8 +72,8 @@ router.get('/debate/:debate_id', (req, res) => {
   );
 });
 
-// Calculate winner and update points
-function calculateAndSetWinner(debateId, callback) {
+// Calculate winner function: Determines winner from vote tallies and awards 1 point to winner.
+// To add tie-breaking logic, implement custom scoring when votes are equal (coin flip, etc).
   db.all(
     'SELECT voted_user_id, COUNT(*) as count FROM votes WHERE debate_id = ? GROUP BY voted_user_id',
     [debateId],

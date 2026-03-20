@@ -1,11 +1,13 @@
+// Message routes: Handle posting debate messages and retrieving message threads.
+// To add message editing, add UPDATE route and timestamp tracking for edits.
 const express = require('express');
 const db = require('../database');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Post message
-router.post('/', authMiddleware, (req, res) => {
+// Post message endpoint: Inserts message, validates turn, and switches turn to opponent.
+// To add message moderation, validate content against spam/profanity filters before insertion.
   const { debate_id, content } = req.body;
 
   if (!debate_id || !content) {
@@ -54,8 +56,8 @@ router.post('/', authMiddleware, (req, res) => {
   });
 });
 
-// Get messages for debate
-router.get('/debate/:debate_id', (req, res) => {
+// Get messages endpoint: Retrieves all messages for debate with username joins in chronological order.
+// To paginate messages, add LIMIT and OFFSET parameters to prevent loading thousands of messages.
   const { debate_id } = req.params;
 
   db.all(

@@ -1,11 +1,13 @@
-// Global App Object
+// Global App Object: Main application state and methods for forum functionality.
+// Modify apiBase to connect to different server URL or port.
 const app = {
   apiBase: 'http://localhost:5000/api',
   token: localStorage.getItem('token') || null,
   currentUser: null,
   currentDebate: null,
 
-  // Initialize
+  // Initialize app: Loads current user and shows debates if authenticated.
+  // Call during DOMContentLoaded to initialize on page load.
   init() {
     if (this.token) {
       this.getCurrentUser();
@@ -13,7 +15,8 @@ const app = {
     }
   },
 
-  // Switch views
+  // Switch views: Hides all views except specified one and updates navbar visibility based on auth.
+  // To add new view, create new div with class 'view' and pass its id to this method.
   showView(viewName) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewName).classList.add('active');
@@ -25,16 +28,22 @@ const app = {
     document.getElementById('logoutBtn').style.display = this.token ? 'inline' : 'none';
   },
 
+  // Go home: Switches to home/login view.
+  // Call when user wants to return to login screen.
   goHome() {
     this.showView('homeView');
   },
 
+  // Go debates: Switches to debates list and loads debates with pending invitations.
+  // Call after login or when user clicks Debatter in navbar.
   goDebates() {
     this.showView('debatesView');
     this.loadDebates();
     this.loadPendingInvitations();
   },
 
+  // Create debate view: Switches to debate creation form, requires authentication.
+  // Modify form validation or debate fields by editing validateCreateDebateForm().
   goCreateDebate() {
     if (!this.token) {
       this.showMessage('authMessage', 'Du må være logget inn', 'error');
@@ -43,11 +52,15 @@ const app = {
     this.showView('createDebateView');
   },
 
+  // Go to debate: Switches to single debate view and loads all debate details.
+  // Called when users click debate card in debates list.
   goDebatte(debateId) {
     this.showView('debateView');
     this.loadDebate(debateId);
   },
 
+  // Go profile: Switches to user profile view and loads current user's stats.
+  // Add additional profile sections by extending loadProfile() function.
   goProfile() {
     if (!this.currentUser) return;
     this.showView('profileView');
@@ -55,6 +68,8 @@ const app = {
   },
 
   // Authentication
+  // Register: Creates new user account with validation, then clears password field.
+  // Add email field or password confirmation by extending username/password validation.
   async register() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -84,6 +99,8 @@ const app = {
     }
   },
 
+  // Login: Authenticates user with credentials, stores JWT token, and transitions to debates view.
+  // Token is saved to localStorage and used in subsequent API requests via authMiddleware.
   async login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -119,6 +136,8 @@ const app = {
     }
   },
 
+  // Logout: Clears token, user data, form fields, and returns to home view.
+  // Call when user clicks logout button in navbar.
   logout() {
     this.token = null;
     this.currentUser = null;
@@ -128,6 +147,8 @@ const app = {
     this.goHome();
   },
 
+  // Get current user: Fetches authenticated user profile data using stored token.
+  // Updates this.currentUser with username and points; fails silently if not authenticated.
   async getCurrentUser() {
     if (!this.token) return;
 
@@ -145,6 +166,8 @@ const app = {
   },
 
   // Debates
+  // Load debates: Fetches debate list from API with optional category and status filters.
+  // Filters are read from select elements; add new filter selects to extend functionality.
   async loadDebates() {
     try {
       const category = document.getElementById('categoryFilter')?.value || '';
@@ -165,6 +188,8 @@ const app = {
     }
   },
 
+  // Render debates list: Displays fetched debates as clickable cards with title, category, and views.
+  // Modify card layout or add additional debate info by editing the card.innerHTML template.
   renderDebatesList(debates) {
     const list = document.getElementById('debatesList');
     list.innerHTML = '';
@@ -194,11 +219,15 @@ const app = {
     });
   },
 
+  // Apply filters: Reloads both debates list and pending invitations when filters change.
+  // Call when user changes category or status filter dropdowns.
   applyFilters() {
     this.loadDebates();
     this.loadPendingInvitations();
   },
 
+  // Load pending invitations: Fetches all debates and filters for those pending for current user.
+  // Displayed separately from main debate list in 'pendingInvitationsSection'.
   async loadPendingInvitations() {
     try {
       const response = await fetch(`${this.apiBase}/debates`);
@@ -215,6 +244,8 @@ const app = {
     }
   },
 
+  // Render pending invitations: Shows debate cards with accept/reject buttons and creator names.
+  // Creator names are fetched individually per invitation via separate API call.
   renderPendingInvitations(invitations) {
     const section = document.getElementById('pendingInvitationsSection');
     const list = document.getElementById('pendingInvitationsList');
@@ -258,6 +289,8 @@ const app = {
     });
   },
 
+  // Accept invitation: Submits acceptance to backend, which changes debate status to 'active'.
+  // Call when user clicks Aksepter on pending invitation card.
   async acceptInvitation(debateId) {
     try {
       const response = await fetch(`${this.apiBase}/debates/${debateId}/accept`, {
@@ -282,6 +315,8 @@ const app = {
     }
   },
 
+  // Reject invitation: Deletes debate record from database.
+  // Call when user clicks Avslag on pending invitation card.
   async rejectInvitation(debateId) {
     try {
       const response = await fetch(`${this.apiBase}/debates/${debateId}/reject`, {
@@ -306,6 +341,8 @@ const app = {
     }
   },
 
+  // Load debate: Fetches debate details, participants, messages, and displays UI based on debate status.
+  // Handles showing/hiding message input box, end button, and voting section based on user role.
   async loadDebate(debateId) {
     try {
       const response = await fetch(`${this.apiBase}/debates/${debateId}`);
@@ -355,6 +392,8 @@ const app = {
     }
   },
 
+  // Update turn indicators: Displays turn status (🟢 Din tur or ⏳ Venter) for each participant.
+  // Called after loading debate to reflect current turn state.
   updateTurnIndicators() {
     const isCreatorTurn = this.currentDebate.current_turn === this.currentDebate.creator_id;
 
@@ -369,6 +408,8 @@ const app = {
       isCreatorTurn && this.currentDebate.status === 'active' ? 'block' : 'none';
   },
 
+  // Load messages: Fetches all messages for debate and displays them with usernames and timestamps.
+  // Auto-scrolls to bottom after rendering messages.
   async loadMessages(debateId) {
     try {
       const response = await fetch(`${this.apiBase}/messages/debate/${debateId}`);
@@ -400,6 +441,8 @@ const app = {
     }
   },
 
+  // Post message: Validates input, sends message to API, and refreshes debate view.
+  // Only available when it's user's turn and debate is active.
   async postMessage() {
     const content = document.getElementById('messageInput').value;
 
@@ -436,6 +479,8 @@ const app = {
     }
   },
 
+  // Validate create debate form: Checks all required fields and marks missing ones invalid.
+  // Returns object with hasErrors flag and array of missing field names.
   validateCreateDebateForm() {
     const fields = [
       { id: 'debateTitle', name: 'Tittel' },
@@ -465,6 +510,8 @@ const app = {
     return { hasErrors, errors };
   },
 
+  // Create debate: Validates form, sends debate creation request, and redirects to debates list.
+  // Debate tags are split from comma-separated input and sent as array.
   async createDebate(event) {
     event.preventDefault();
 
@@ -523,6 +570,8 @@ const app = {
     }
   },
 
+  // Search opponents: Queries users by username and displays results as clickable list.
+  // Requires minimum 2 characters; limit 10 results returned by API.
   async searchOpponents() {
     const query = document.getElementById('opponentSearch').value;
     const resultsDiv = document.getElementById('opponentSearchResults');
@@ -561,6 +610,8 @@ const app = {
     }
   },
 
+  // Select opponent: Populates opponent ID and name fields, hides search results.
+  // Called when user clicks opponent result card.
   selectOpponent(userId, username) {
     document.getElementById('opponentId').value = userId;
     document.getElementById('opponentSearch').value = username;
@@ -569,6 +620,8 @@ const app = {
     document.getElementById('selectedOpponent').style.display = 'block';
   },
 
+  // End debate: Asks confirmation then marks debate as finished, enabling voting phase.
+  // Only ender_id user can call this endpoint.
   async endDebate() {
     if (!confirm('Er du sikker på at du vil avslutte debatten?')) return;
 
@@ -589,6 +642,8 @@ const app = {
   },
 
   // Voting
+  // Load voting section: Displays voting buttons for non-participants or results for participants.
+  // Fetches participant names and initializes vote buttons with their names.
   async loadVotingSection() {
     try {
       const isParticipant = this.currentDebate.creator_id === this.currentUser?.id ||
@@ -619,6 +674,8 @@ const app = {
     }
   },
 
+  // Vote: Submits vote for user, prevents duplicate voting via UNIQUE constraint.
+  // Updates results display after vote submission.
   async vote(userId) {
     try {
       const response = await fetch(`${this.apiBase}/votes`, {
@@ -649,6 +706,8 @@ const app = {
     }
   },
 
+  // Load debate results: Fetches votes and displays vote counts with winner determination.
+  // Shows different message for no votes, tied votes, or clear winner.
   async loadDebateResults() {
     try {
       const response = await fetch(`${this.apiBase}/votes/debate/${this.currentDebate.id}`);
@@ -702,6 +761,8 @@ const app = {
   },
 
   // Profile
+  // Load profile: Fetches user data, points, rank, and debate statistics.
+  // Add new profile sections by extending response with additional user query.
   async loadProfile(userId) {
     try {
       const response = await fetch(`${this.apiBase}/users/${userId}`);
@@ -718,6 +779,8 @@ const app = {
   },
 
   // Utilities
+  // Show message: Displays temporary message (success or error) in specified element.
+  // Message auto-hides after 5 seconds; type can be 'success' or 'error'.
   showMessage(elementId, message, type) {
     const el = document.getElementById(elementId);
     el.innerText = message;
@@ -728,6 +791,8 @@ const app = {
     }, 5000);
   },
 
+  // Escape HTML: Prevents XSS attacks by converting HTML characters to entities.
+  // Use this when inserting user-supplied text into DOM via innerHTML.
   escapeHtml(text) {
     const map = {
       '&': '&amp;',
@@ -739,6 +804,8 @@ const app = {
     return text.replace(/[&<>"']/g, m => map[m]);
   },
 
+  // Init form validation: Adds listeners to form fields to remove invalid styling when corrected.
+  // Call during DOMContentLoaded to enable real-time validation feedback.
   initFormValidation() {
     const formFields = [
       'debateTitle',
@@ -769,7 +836,8 @@ const app = {
   }
 };
 
-// Initialize on load
+// Initialize on page load: Calls app.init() to check authentication and init form validation.
+// This code runs automatically when HTML DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
   app.initFormValidation();

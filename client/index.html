@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
+  <!-- Document metadata and styling: Sets UTF-8 encoding, viewport for responsive design, and links CSS. -->
+  <!-- To change app name, modify <title> tag; to add favicon, add <link rel="icon" href="...">. -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Debattforum</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Navigation Bar -->
+  <!-- Navigation Bar: Header with logo and authenticated user menu items. -->
+  <!-- To add more nav items, add <a> tag with class="nav-link" and id="visibilityToggle". -->
   <nav class="navbar" role="navigation" aria-label="Hovednavigasjon">
     <div class="navbar-container">
       <h1 class="navbar-brand">
@@ -26,9 +29,11 @@
     </div>
   </nav>
 
-  <!-- Main Container -->
+  <!-- Main Container: All views/pages are children of this div. -->
+  <!-- Views are shown/hidden by JavaScript by adding/removing 'active' class. -->
   <div class="container">
-    <!-- Home/Auth View -->
+    <!-- Home/Auth View: Login and registration form. -->
+    <!-- Shown on first load or after logout; contains username/password inputs. -->
     <div id="homeView" class="view active">
       <div class="auth-container">
         <div class="auth-box">
@@ -54,7 +59,8 @@
       </div>
     </div>
 
-    <!-- Debates List View -->
+    <!-- Debates List View: Shows all debates with category/status filters and pending invitations. -->
+    <!-- Add new filter select elements here to enable additional filtering criteria. -->
     <div id="debatesView" class="view">
       <div class="debates-header">
         <h2>Debatter</h2>
@@ -86,7 +92,8 @@
       <div id="debatesList" class="debates-grid"></div>
     </div>
 
-    <!-- Debate Detail View -->
+    <!-- Debate Detail View: Single debate display with messages, turn indicators, voting, and end button. -->
+    <!-- Message input and voting sections shown/hidden based on debate status and user role. -->
     <div id="debateView" class="view">
       <div class="debate-container">
         <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
@@ -152,7 +159,8 @@
       </div>
     </div>
 
-    <!-- Create Debate View -->
+    <!-- Create Debate View: Form to create new debate with opponent search and role selection. -->
+    <!-- Form validation prevents submission until all required fields filled. -->
     <div id="createDebateView" class="view">
       <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
       <div class="create-debate-container">
@@ -218,7 +226,8 @@
       </div>
     </div>
 
-    <!-- Profile View -->
+    <!-- Profile View: User profile showing points, rank, and debate statistics. -->
+    <!-- Data loaded dynamically from API based on user ID. -->
     <div id="profileView" class="view">
       <button onclick="app.goDebates();" class="btn-back">← Tilbake</button>
       <div class="profile-container">

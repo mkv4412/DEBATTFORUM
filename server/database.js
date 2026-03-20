@@ -1,3 +1,5 @@
+// Initialize SQLite database connection and create tables if they don't exist.
+// Change DB_PATH to use a different database file or location.
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -13,7 +15,8 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 });
 
 function initializeDatabase() {
-  // Users table
+  // Users table: Stores user accounts with username, hashed password, and points earned from debate wins.
+  // Add new user fields (email, bio, avatar) to this table structure.
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +27,8 @@ function initializeDatabase() {
     )
   `);
 
-  // Debates table
+  // Debates table: Stores debate metadata including participants, status, and turn information.
+  // Modify status values or add scoring columns based on debate rule changes.
   db.run(`
     CREATE TABLE IF NOT EXISTS debates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +52,8 @@ function initializeDatabase() {
     )
   `);
 
-  // Messages table
+  // Messages table: Stores debate messages with timestamps and foreign keys linking to debates and users.
+  // Add message_type column to support different message types (normal, system, etc).
   db.run(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,7 +66,8 @@ function initializeDatabase() {
     )
   `);
 
-  // Votes table
+  // Votes table: Stores votes on finished debates with UNIQUE constraint to prevent duplicate voting.
+  // Modify UNIQUE constraint if allowing multiple votes per user per debate.
   db.run(`
     CREATE TABLE IF NOT EXISTS votes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +82,8 @@ function initializeDatabase() {
     )
   `);
 
-  // Tags table
+  // Tags table: Stores debate topic tags that can be associated with multiple debates.
+  // Add tag_color, tag_category columns to organize tags better.
   db.run(`
     CREATE TABLE IF NOT EXISTS tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,7 +91,8 @@ function initializeDatabase() {
     )
   `);
 
-  // Debate_Tags junction table
+  // Debate_Tags junction table: Links debates to multiple tags in a many-to-many relationship.
+  // This structure allows tag reuse and flexible debate categorization.
   db.run(`
     CREATE TABLE IF NOT EXISTS debate_tags (
       debate_id INTEGER NOT NULL,

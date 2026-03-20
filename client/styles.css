@@ -1,4 +1,4 @@
-/* Root Variables */
+/* Root color variables and spacing: Centralized design tokens for consistent theming throughout app. To change color scheme, modify hex codes; all elements automatically update. */
 :root {
   --primary-color: #2c3e50;
   --secondary-color: #3498db;
@@ -12,7 +12,7 @@
   --spacing: 1rem;
 }
 
-/* Accessibility */
+/* Accessibility and focus states: Ensures keyboard navigation and screen reader support. To improve accessibility, add aria-label attributes to interactive elements. */
 :focus {
   outline: 3px solid var(--focus-color);
   outline-offset: 2px;
@@ -25,7 +25,7 @@ body:not(.debate-mode) textarea:focus {
   box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.2);
 }
 
-/* Global Styles */
+/* Global base styles: Resets margins/padding and sets typography foundation throughout app. Font-family can be changed in body to use Google Fonts or system fonts. */
 * {
   margin: 0;
   padding: 0;
@@ -44,7 +44,7 @@ body {
   transition: all 0.3s ease;
 }
 
-/* Navbar */
+/* Navigation bar: Sticky header with logo and user menu that stays visible while scrolling. Add class="hide-navbar" to hide on specific pages. */
 .navbar {
   background-color: var(--primary-color);
   color: white;
@@ -64,6 +64,7 @@ body {
   padding: 0 var(--spacing);
 }
 
+/* Navbar brand/logo: App title link that returns to home when clicked, with hover color transition. Customize font size here to adjust logo prominence. */
 .navbar-brand a {
   color: white;
   text-decoration: none;
@@ -75,12 +76,14 @@ body {
   color: var(--secondary-color);
 }
 
+/* Navbar menu: Flex container for navigation links and buttons, positioned on right side of navbar. Add new items by creating new nav-link or button elements. */
 .navbar-menu {
   display: flex;
   gap: 2rem;
   align-items: center;
 }
 
+/* Navigation links: White text links with color transition on hover to secondary color. Create new links with class="nav-link". */
 .nav-link {
   color: white;
   text-decoration: none;
@@ -91,12 +94,14 @@ body {
   color: var(--secondary-color);
 }
 
+/* Notification bell: Warning-colored icon showing unread notification count badge in navbar. Update --warning-color to change bell color. */
 .notification-bell {
   color: var(--warning-color);
   font-weight: bold;
   position: relative;
 }
 
+/* Notification count badge: Small colored badge showing number of notifications next to bell icon. Update --danger-color to change badge color. */
 .notification-count {
   background-color: var(--danger-color);
   color: white;
@@ -106,6 +111,7 @@ body {
   margin-left: 0.25rem;
 }
 
+/* Navigation buttons: Outlined buttons in navbar (logout) with hover effects and border transitions. Clone with different classes for additional nav actions. */
 .nav-btn {
   padding: 0.5rem 1rem;
   background-color: transparent;
@@ -127,7 +133,9 @@ body {
   color: white;
 }
 
-/* Container */
+/* Main container: Centers content with max-width and maintains space for fixed navbar. -->
+<!-- Adjust max-width or padding for different layout preferences. -->
+/* Main container: Centers content with max-width and maintains proper spacing below fixed navbar. Adjust max-width or padding for different layout preferences. */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -135,7 +143,9 @@ body {
   min-height: calc(100vh - 80px);
 }
 
-/* Views */
+/* View system: Show one view at a time with fade-in animation for smooth transitions. -->
+<!-- Add class 'active' via JavaScript to display view; remove to hide. -->
+/* View system: Hide/show pages using display:none/block with fade-in animation. Add 'active' class via JavaScript to display view, remove to hide. */
 .view {
   display: none;
   animation: fadeIn 0.3s ease-in-out;
@@ -156,7 +166,7 @@ body {
   }
 }
 
-/* Auth */
+/* Authentication login box: Centered form container with standard form styling. To customize layout, modify .auth-box max-width or padding values. */
 .auth-container {
   display: flex;
   align-items: center;
@@ -184,6 +194,7 @@ body {
   font-size: 0.9rem;
 }
 
+/* Form groups: Standard input styling with focus and error states for validation feedback. Add input[type-specific] selectors to customize different input types. */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -236,7 +247,7 @@ body {
   flex: 1;
 }
 
-/* Buttons */
+/* Interactive buttons: Primary, secondary, and danger variants with hover animations and transitions. Modify border-radius or padding to match design system. */
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -293,11 +304,23 @@ body {
   transition: color 0.2s;
 }
 
+/* Back button: Minimal button (no background) with left arrow returning to previous page. Styled as link with color transition on hover. */
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
 .btn-back:hover {
   color: var(--primary-color);
 }
 
-/* Messages */
+/* Message notifications: Styled message boxes for success/error feedback that slide down and hide after timeout. Use app.showMessage() to display. */
 .message {
   padding: 0.75rem 1rem;
   border-radius: 4px;
@@ -333,7 +356,7 @@ body {
   }
 }
 
-/* Debates List */
+/* Debates list header and grid: Shows debate filtering controls and responsive grid layout with cards. Modify grid-template-columns to change card layout or add more filter selects. */
 .debates-header {
   display: flex;
   justify-content: space-between;
@@ -347,6 +370,7 @@ body {
   color: var(--primary-color);
 }
 
+/* Filter controls: Flex container with dropdown select inputs for filtering debates by category and status. Add new filter inputs by duplicating select element. */
 .filter-controls {
   display: flex;
   gap: 1rem;
@@ -360,12 +384,14 @@ body {
   cursor: pointer;
 }
 
+/* Debates grid layout: Responsive CSS grid showing debate cards with auto-fill and minimum width. Adjust minmax(300px) value to control card sizing. */
 .debates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
+/* Debate card component: Clickable card with title, category, status badges, and view count display. Add border effects or different colors for different debate statuses. */
 .debate-card {
   background: white;
   border-radius: 8px;
@@ -454,7 +480,7 @@ body {
   margin-top: 0.75rem;
 }
 
-/* Debate Detail */
+/* Debate detail view: Main container for debate with header, participants, and messages section. Adjust max-width or padding for different viewing experience. */
 .debate-container {
   background: white;
   border-radius: 8px;
@@ -462,6 +488,7 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Debate header and metadata: Section showing debate title, category, status indicator, and view count. */
 .debate-header {
   margin-bottom: 2rem;
   border-bottom: 2px solid var(--light-bg);
@@ -481,7 +508,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* Debate Participants */
+/* Debate participants section: Shows two-column layout with creator and opponent side-by-side with turn indicators. */
 .debate-participants {
   display: flex;
   justify-content: space-between;
@@ -490,6 +517,7 @@ body {
   gap: 1rem;
 }
 
+/* Debate participant box: Individual participant display with name, role (creator/opponent), and turn indicator. Flex: 1 ensures equal width sharing in parent. */
 .participant {
   flex: 1;
   background: var(--light-bg);
@@ -517,6 +545,7 @@ body {
   color: var(--warning-color);
 }
 
+/* VS separator: Text label displayed between creator and opponent participant boxes during debate. Large bold font with secondary color. */
 .vs {
   font-size: 1.5rem;
   font-weight: bold;
@@ -524,7 +553,7 @@ body {
   margin: 0 1rem;
 }
 
-/* Messages */
+/* Messages display: Scrollable container with individual message boxes showing username, content, and timestamp. Auto-scroll to bottom on new messages via JavaScript. */
 .messages-container {
   background: var(--light-bg);
   border-radius: 8px;
@@ -540,6 +569,7 @@ body {
   gap: 1rem;
 }
 
+/* Individual message box: Shows single message with username, content, and timestamp with left-border accent. Use animation on new messages for visual feedback. */
 .message-box {
   background: white;
   padding: 1rem;
@@ -579,6 +609,7 @@ body {
   margin-top: 0.5rem;
 }
 
+/* Message input form: Flex container with textarea for debate message and submit button on the right. Textarea expands vertically when user types. */
 .message-input-box {
   display: flex;
   gap: 1rem;
@@ -600,7 +631,7 @@ body {
   padding: 0.75rem 1.5rem;
 }
 
-/* Voting Section */
+/* Voting interface: Styled vote buttons and animated results bars showing vote distribution. Modify vote-bar background color or animation speed for different effects. */
 .voting-section {
   background: #e8f4f8;
   border-radius: 8px;
@@ -626,6 +657,7 @@ body {
   justify-content: center;
 }
 
+/* Vote buttons: Large clickable buttons showing participant name with hover scale effect and disabled state. Set :disabled to prevent re-voting. */
 .vote-btn {
   padding: 1rem 2rem;
   background-color: var(--secondary-color);
@@ -651,7 +683,7 @@ body {
   transform: none;
 }
 
-/* Results Section */
+/* Results display: Shows vote winner and vote distribution across participants with colorized styling. Update vote-fill color to match primary brand color. */
 .results-section {
   background: #f0f9ff;
   border-radius: 8px;
@@ -665,6 +697,7 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* Results box: Container displaying winner announcement and vote statistics in styled card layout. Shows prominent winner message and vote distribution. */
 .result-box {
   background: white;
   padding: 1.5rem;
@@ -679,12 +712,14 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Vote stats container: Horizontal flex layout showing vote distribution between two participants. Centered on page with gap between participants. */
 .vote-stats {
   display: flex;
   gap: 2rem;
   justify-content: center;
 }
 
+/* Individual vote stat: Shows participant name, vote count, and visual bar showing vote percentage. Vote count in large font, bar fills dynamically. */
 .vote-stat {
   text-align: center;
 }
@@ -717,7 +752,7 @@ body {
   transition: width 0.3s ease;
 }
 
-/* Create Debate */
+/* Debate creation form: Centered form container with input fields for debate details and opponent selection. Extend with additional fields by copying form-group template. */
 .create-debate-container {
   background: white;
   border-radius: 8px;
@@ -732,6 +767,7 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Debate form structure: Flex column layout with form groups that stack vertically and submit button. Extend with additional form-group elements for more fields. */
 .debate-form {
   display: flex;
   flex-direction: column;
@@ -742,7 +778,7 @@ body {
   margin-top: 1rem;
 }
 
-/* Profile */
+/* User profile page: Displays user stats (points, rank, debates, wins) in responsive grid layout. Add new stat boxes by duplicating .stat div structure. */
 .profile-container {
   max-width: 600px;
   margin: 0 auto;
@@ -761,12 +797,14 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* Profile stats grid: Displays user statistics (points, rank, etc) in responsive 2-column grid. Each stat shown in a labeled box with centered text. */
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
 
+/* Individual stat box: Shows single user stat with label above and large value below. Customize colors by changing --secondary-color. */
 .stat {
   background: var(--light-bg);
   padding: 1rem;
@@ -789,7 +827,7 @@ body {
   color: var(--secondary-color);
 }
 
-/* Responsive */
+/* Responsive breakpoints: Mobile-first design adapts styles for tablet (768px) and mobile (480px) screens. Modify max-width values to target different device sizes. */
 @media (max-width: 768px) {
   .navbar-menu {
     gap: 1rem;
@@ -878,7 +916,9 @@ body {
   }
 }
 
-/* Debate Mode (for focused debate viewing) */
+/* Debate focused mode: Optional mode for immersive debate viewing (class added via JS). -->
+<!-- Apply this class when user enters fullscreen debate mode. -->
+/* Debate focused mode: Optional immersive debate viewing class added via JavaScript for full-screen experience. Apply this class when user enters reading-mode. */
 body.debate-mode {
   background-color: #fff;
 }
@@ -893,7 +933,7 @@ body.debate-mode .messages-container {
   border: 2px solid var(--secondary-color);
 }
 
-/* Search Results */
+/* Search results dropdown: Positioned below opponent search input showing matching users with points displayed. Position: absolute keeps dropdown in input context. */
 .search-results {
   position: absolute;
   top: 100%;
@@ -909,6 +949,7 @@ body.debate-mode .messages-container {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Search result item: Individual user result in opponent search dropdown showing username and points. Hover highlights background for selection feedback. */
 .search-result-item {
   padding: 0.75rem 1rem;
   cursor: pointer;
@@ -935,6 +976,7 @@ body.debate-mode .messages-container {
   margin-left: 0.5rem;
 }
 
+/* Selected opponent confirmation: Green success-styled box showing chosen opponent name after search result selection. Confirms selection to user. */
 .selected-opponent {
   padding: 0.5rem;
   background-color: #d4edda;

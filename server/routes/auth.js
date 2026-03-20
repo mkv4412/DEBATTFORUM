@@ -1,3 +1,5 @@
+// Auth routes: Handle user registration, login, profile retrieval, and user search.
+// Change password minimum length by modifying the password.length check.
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -7,7 +9,8 @@ const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// Register
+// Register endpoint: Creates new user account with hashed password and basic validation.
+// To strengthen security, add email verification or password complexity requirements.
 router.post('/register', (req, res) => {
   const { username, password } = req.body;
 
@@ -34,7 +37,8 @@ router.post('/register', (req, res) => {
   );
 });
 
-// Login
+// Login endpoint: Validates credentials against database and returns JWT token if valid.
+// To add account lockout, track failed login attempts and add rate limiting.
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -60,7 +64,8 @@ router.post('/login', (req, res) => {
   });
 });
 
-// Get current user
+// Get current user endpoint: Returns authenticated user's profile data using JWT token from middleware.
+// Add additional fields like email, bio, or avatar by expanding the SELECT query.
 router.get('/me', authMiddleware, (req, res) => {
   db.get('SELECT id, username, points FROM users WHERE id = ?', [req.user.id], (err, user) => {
     if (err || !user) {
@@ -70,7 +75,8 @@ router.get('/me', authMiddleware, (req, res) => {
   });
 });
 
-// Search users by username
+// Search users endpoint: Returns users matching search query with limit of 10 results (no auth needed).
+// Increase limit or add pagination by modifying the LIMIT value or adding offset parameter.
 router.get('/search', (req, res) => {
   const { username } = req.query;
 
