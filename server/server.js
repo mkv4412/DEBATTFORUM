@@ -6,9 +6,6 @@ const path = require('path');
 const db = require('./database');
 const authRoutes = require('./routes/auth');
 const debateRoutes = require('./routes/debates');
-const messageRoutes = require('./routes/messages');
-const voteRoutes = require('./routes/votes');
-const userRoutes = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,12 +17,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
 
 // Routes: Mount all API route handlers on their respective paths.
+// All debate-related operations (debates, messages, votes, users) are in /api/debates
 // Add new routes by requiring them and using app.use('/api/newroute', newRoutes).
 app.use('/api/auth', authRoutes);
 app.use('/api/debates', debateRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/votes', voteRoutes);
-app.use('/api/users', userRoutes);
 
 // Serve frontend: Return index.html for root path to enable client-side routing.
 // Modify this to serve different SPA files if needed.
